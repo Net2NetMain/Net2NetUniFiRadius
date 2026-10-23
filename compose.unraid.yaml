@@ -1,0 +1,22 @@
+# Use this file directly: docker compose -f compose.unraid.yaml up -d --build
+# br0 must already exist in Unraid Docker settings.
+services:
+  unifi-radius:
+    build: .
+    image: botchris/net2netunifiradius:latest
+    container_name: net2net-unifi-radius
+    restart: unless-stopped
+    environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      RADIUS_SERVER_NAME: ${RADIUS_SERVER_NAME:-radius.net2net.local}
+    networks:
+      br0:
+        ipv4_address: ${UNIFI_RADIUS_IP:-172.17.10.101}
+    volumes:
+      - /mnt/user/appdata/net2net-unifi-radius/data:/data
+    labels:
+      net.unraid.docker.managed: dockerman
+      net.unraid.docker.webui: http://[IP]:[PORT:8080]
+networks:
+  br0:
+    external: true

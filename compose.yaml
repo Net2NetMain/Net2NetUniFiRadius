@@ -1,0 +1,15 @@
+services:
+  unifi-radius:
+    build: .
+    image: botchris/net2netunifiradius:latest
+    container_name: net2net-unifi-radius
+    restart: unless-stopped
+    environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      RADIUS_SERVER_NAME: ${RADIUS_SERVER_NAME:-radius.net2net.local}
+    ports:
+      - "${HTTP_PORT:-8088}:8080/tcp"
+      - "${AUTH_PORT:-1812}:1812/udp"
+      - "${ACCT_PORT:-1813}:1813/udp"
+    volumes:
+      - ./data:/data

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>net2net-unifi-radius</Name>
+  <Repository>botchris/net2netunifiradius:latest</Repository>
+  <Registry>https://hub.docker.com/r/botchris/net2netunifiradius</Registry>
+  <Network>br0</Network>
+  <MyIP>172.17.10.101</MyIP>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/Net2NetMain/Net2NetUniFiRadius/issues</Support>
+  <Project>https://github.com/Net2NetMain/Net2NetUniFiRadius</Project>
+  <Overview>Net2Net UniFi RADIUS. Local users, VLAN profiles, PEAP/MSCHAPv2 and accounting. The environment file supplies the bootstrap administrator password.</Overview>
+  <Category>Network:Management Network:Other</Category>
+  <WebUI>http://[IP]:[PORT:8080]</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/Net2NetMain/Net2NetUniFiRadius/main/unraid/net2net-unifi-radius.xml</TemplateURL>
+  <Icon/>
+  <ExtraParams>--env-file /mnt/user/appdata/net2net-unifi-radius/source/.env</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <Config Name="Appdata" Target="/data" Default="/mnt/user/appdata/net2net-unifi-radius/data" Mode="rw" Description="Persistent database, encryption key, certificates and accounting logs" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/net2net-unifi-radius/data</Config>
+  <Config Name="Web portal" Target="8080" Default="8080" Mode="tcp" Description="Portal on dedicated br0 IP" Type="Port" Display="always" Required="true" Mask="false">8080</Config>
+  <Config Name="RADIUS authentication" Target="1812" Default="1812" Mode="udp" Description="RADIUS authentication" Type="Port" Display="always" Required="true" Mask="false">1812</Config>
+  <Config Name="RADIUS accounting" Target="1813" Default="1813" Mode="udp" Description="RADIUS accounting" Type="Port" Display="always" Required="true" Mask="false">1813</Config>
+</Container>
