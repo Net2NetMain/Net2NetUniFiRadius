@@ -1,8 +1,21 @@
 # Net2Net UniFi RADIUS
 
-Independent UniFi edition derived from [Net2NetRadius](https://github.com/Net2NetMain/Net2NetRadius). Version 0.1.0, initial test appliance. The parent MikroTik application and its data are not changed.
+Independent UniFi edition derived from [Net2NetRadius](https://github.com/Net2NetMain/Net2NetRadius). Version 0.2.0. The parent MikroTik application and its data are not changed.
 
-Source: [Net2NetUniFiRadius](https://github.com/Net2NetMain/Net2NetUniFiRadius). Container: [botchris/net2netunifiradius](https://hub.docker.com/r/botchris/net2netunifiradius). Release tags: `0.1.0` and `latest`.
+Source: [Net2NetUniFiRadius](https://github.com/Net2NetMain/Net2NetUniFiRadius). Container: [botchris/net2netunifiradius](https://hub.docker.com/r/botchris/net2netunifiradius). Release tags: `0.2.0` and `latest`.
+
+## Import CSV / Excel
+
+Open **Import data**, or click **Import** on Wi-Fi users, VLAN profiles or Network devices. Download a template, fill in the records, select your file, and click **Preview import**. Review errors, counts, record names and policies, then click **Import these records**. Nothing is saved during preview. If the file, options or existing records change, preview again.
+
+- CSV: UTF-8, comma/semicolon/tab separated. Select users, profiles or devices. Excel `.xlsx`: use matching sheet names; choose **Full system** to process all three sheets. Older `.xls` files must be saved as `.xlsx`.
+- Users: `username,display_name,password,profile,vlan,status`. New users require a password (12+ printable ASCII characters); display name defaults to username and status to active. A missing profile is automatically created when a valid VLAN is included. For an existing profile, leave VLAN blank or match it exactly.
+- Profiles: `name,vlan` (VLAN 1–4094). Devices: `name,address,secret` (16+ characters using letters, numbers, underscore, dot, ! @ # or hyphen).
+- **Skip existing** is the default. **Update matching** matches usernames or profile/device names. Blank passwords/shared secrets retain existing credentials. Other fields replace existing values; blank user status becomes active. No records are deleted.
+- The entire batch must validate. Imports are atomic and reload RADIUS once. An encrypted database snapshot is saved to `/data/imports/before-import-*.sqlite` before applying; keep the existing `/data/secret.key` to recover it. These local snapshots are not rotated automatically.
+- Limit: 8 MB upload, 5,000 data rows total, 30 columns per sheet, 50 MB expanded workbook. Formula cells are rejected; paste values instead. Unknown workbook sheets are ignored.
+
+Full-system workbook import covers users, profiles and network devices. It preserves this installation's administrator login, certificates and accounting history. Use full appliance backups for a byte-for-byte migration including those files. Upload files are processed in memory; they are not retained, and credentials are hidden in previews. Protect source exports because they contain credentials.
 
 ## First release
 

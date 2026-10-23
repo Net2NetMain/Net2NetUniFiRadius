@@ -8,6 +8,8 @@ import secrets
 import subprocess
 import urllib.request
 import http.cookiejar
+import csv
+import io
 
 jar = http.cookiejar.CookieJar()
 http = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
@@ -44,7 +46,22 @@ def run():
         nas_id = next(p['id'] for p in api('state')['nas'] if p['address'] == '127.0.0.1')
         body = {'username': username, 'display_name': 'Temporary smoke test',
                 'password': password, 'profile_id': profile_id, 'status': 'active'}
-        api('users', body)
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['username', 'display_name', 'password', 'profile', 'vlan', 'status'])
+        writer.writerow([username, body['display_name'], password, 'Smoke ' + suffix, 3077, 'active'])
+        content = output.getvalue().encode()
+        def import_request(stage, token=None):
+            request = urllib.request.Request('http://127.0.0.1:8080/api/import/' + stage +
+                '?filename=smoke.csv&kind=users&duplicates=skip', data=content,
+                headers={'Content-Type': 'application/octet-stream', 'X-Net2Net-Request': 'portal',
+                         **({'X-Import-Preview': token} if token else {})})
+            with http.open(request, timeout=30) as response:
+                return json.load(response)
+        preview = import_request('preview')
+        assert preview['valid'], preview
+        assert import_request('apply', preview['token'])['applied']
+        print('PASS: CSV import preview and atomic apply')
         user_id = next(p['id'] for p in api('state')['users'] if p['username'] == username)
         radius(username, password, secret, 'Access-Accept')
         print('PASS: PAP authentication and VLAN 3077')

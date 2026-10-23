@@ -162,7 +162,7 @@ async def lifespan(app):
             RADIUS_PROCESS.wait(timeout=10)
 
 
-app = FastAPI(title='Net2Net UniFi RADIUS', version='0.1.0', lifespan=lifespan)
+app = FastAPI(title='Net2Net UniFi RADIUS', version='0.2.0', lifespan=lifespan)
 
 
 def admin(request: Request):
@@ -222,7 +222,7 @@ class Nas(BaseModel):
 def health():
     if RADIUS and (RADIUS_PROCESS is None or RADIUS_PROCESS.poll() is not None):
         raise HTTPException(503, 'RADIUS service is stopped')
-    return {'status': 'ok', 'product': 'Net2Net UniFi RADIUS', 'version': '0.1.0',
+    return {'status': 'ok', 'product': 'Net2Net UniFi RADIUS', 'version': '0.2.0',
             'radius_configured': bool(RADIUS)}
 
 
@@ -393,4 +393,7 @@ def backup():
                     headers={'Content-Disposition': 'attachment; filename=net2net-unifi-backup.zip'})
 
 
+from .importing import register_imports
+
+register_imports(app, admin)
 app.mount('/', StaticFiles(directory=WEB, html=True), name='portal')
