@@ -75,6 +75,19 @@ def run():
         assert 'Accounting-Response' in result.stdout, result.stdout + result.stderr
         assert any(s['session_id'] == suffix for s in api('accounting'))
         print('PASS: real UDP accounting stored and visible in portal')
+        for status, elapsed, uploaded, downloaded in [('Interim-Update', 10, 1024, 4096),
+                ('Interim-Update', 10, 1024, 4096), ('Interim-Update', 20, 3072, 8192),
+                ('Stop', 20, 3072, 8192)]:
+            attrs = (f'User-Name = "{username}"\nAcct-Session-Id = "{suffix}"\n'
+                     f'Acct-Status-Type = {status}\nNAS-IP-Address = 127.0.0.1\n'
+                     f'Acct-Session-Time = {elapsed}\nAcct-Input-Octets = {uploaded}\n'
+                     f'Acct-Output-Octets = {downloaded}\n')
+            result = subprocess.run(['radclient', '-x', '127.0.0.1:1813', 'acct', secret],
+                input=attrs, text=True, capture_output=True, timeout=20)
+            assert 'Accounting-Response' in result.stdout, result.stdout + result.stderr
+        summary = api('usage?period=all&username=' + username)['summary']
+        assert summary['upload_bytes'] == 3072 and summary['download_bytes'] == 8192, summary
+        print('PASS: UDP byte counters and duplicate-safe persistent usage totals')
         # Optional full PEAP exchange using eapol_test installed in a test runner.
         eapol = os.environ.get('EAPOL_TEST')
         if eapol:

@@ -1,5 +1,13 @@
 # Changes
 
+## 0.4.0 — 23 October 2026
+
+- Data usage dashboard: highest-usage users, upload/download totals, period and user filters.
+- Daily charts, monthly history, session usage and accounting freshness.
+- Persistent incremental accounting ingestion with log backfill, cursor recovery and packet deduplication.
+- Cumulative counter deltas, 64-bit gigawords, conservative reset handling and reporting time zones.
+- Usage history stays in SQLite backups; no historical log-tail limit on the reporting database.
+
 ## 0.3.1 — 23 October 2026
 
 - Link the sidebar Net2Net credit to https://www.net2net.co.za/ in a new tab.

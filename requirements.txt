@@ -3,3 +3,4 @@ uvicorn>=0.35,<1
 cryptography>=46,<47
 openpyxl>=3.1.5,<4
 defusedxml>=0.7.1,<1
+tzdata>=2025.1

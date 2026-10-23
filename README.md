@@ -1,8 +1,8 @@
 # Net2Net UniFi RADIUS
 
-Independent UniFi edition derived from [Net2NetRadius](https://github.com/Net2NetMain/Net2NetRadius). Version 0.3.1. The parent MikroTik application and its data are not changed.
+Independent UniFi edition derived from [Net2NetRadius](https://github.com/Net2NetMain/Net2NetRadius). Version 0.4.0. The parent MikroTik application and its data are not changed.
 
-Source: [Net2NetUniFiRadius](https://github.com/Net2NetMain/Net2NetUniFiRadius). Container: [botchris/net2netunifiradius](https://hub.docker.com/r/botchris/net2netunifiradius). Release tags: `0.3.1` and `latest`.
+Source: [Net2NetUniFiRadius](https://github.com/Net2NetMain/Net2NetUniFiRadius). Container: [botchris/net2netunifiradius](https://hub.docker.com/r/botchris/net2netunifiradius). Release tags: `0.4.0` and `latest`.
 
 ## Import CSV / Excel
 
@@ -17,7 +17,19 @@ Open **Import data**, or click **Import** on Wi-Fi users, VLAN profiles or Netwo
 
 Full-system workbook import covers users, profiles and network devices. It preserves this installation's administrator login, certificates and accounting history. Use full appliance backups for a byte-for-byte migration including those files. Upload files are processed in memory; they are not retained, and credentials are hidden in previews. Protect source exports because they contain credentials.
 
-## First release
+## Data usage and heavy users
+
+Open **Data usage** for highest-usage users ranked by total reported download plus upload. Filter today, the last 7 days, this month, the last 30 days or all recorded history. Click **Details** for one user's totals, daily chart, monthly history and sessions. **Accounting** also shows session upload/download and the last report time.
+
+Enable authentication/accounting in UniFi and use a 300-second interim interval. Input octets are client uploads; output octets are client downloads. Units use decimal KB/MB/GB. Missing counters show a dash rather than an assumed zero. Recently reporting sessions are unstopped sessions with a report within 15 minutes; this does not prove that the device is still connected.
+
+The appliance reads complete accounting records incrementally every 15 seconds and on report refresh. Existing detail logs are backfilled, and the SQLite database retains usage when processed logs are rotated or the container restarts. Reports never add cumulative totals repeatedly. Replayed files and repeated counter reports do not inflate totals. Counter rollover includes gigawords; unexplained decreases are treated conservatively and flagged, so affected sessions may be undercounted. Session ID reuse is separated after an observed Stop and a new Start; missing Stop/Start events can limit accuracy.
+
+Daily/monthly usage assigns each observed increase to the accounting report time (adjusted for a supplied accounting delay). It is not a packet-level allocation across midnight. Reports use the browser's named time zone, including daylight saving rules. A missing first report can cause the first available cumulative counter to be attributed to its report date. Lost accounting packets, missing counters or missing old logs cannot be reconstructed. This is operational usage reporting, not a billing-grade traffic meter or browsing history.
+
+Full backups include persisted usage tables. Raw accounting files remain separate under `/data/accounting/`. Copy the stopped full data directory when migrating raw logs as well. Historical logs and usage history currently have no automatic retention/deletion policy.
+
+## Appliance features
 
 - Local administrator portal; Wi-Fi user create/edit/delete and access status.
 - VLAN profiles and per-device RADIUS source IP/shared secret registration.

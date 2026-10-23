@@ -166,18 +166,27 @@ def restart_radius():
 @asynccontextmanager
 async def lifespan(app):
     initialize()
+    from . import usage
+    usage.initialize()
     if RADIUS:
         with db() as c:
             apply_config(c)
+    stop_usage = threading.Event()
+    usage_thread = threading.Thread(target=usage.worker, args=(stop_usage,), daemon=True) if RADIUS else None
+    if usage_thread:
+        usage_thread.start()
     try:
         yield
     finally:
+        stop_usage.set()
+        if usage_thread:
+            usage_thread.join(timeout=5)
         if RADIUS_PROCESS is not None:
             RADIUS_PROCESS.terminate()
             RADIUS_PROCESS.wait(timeout=10)
 
 
-app = FastAPI(title='Net2Net UniFi RADIUS', version='0.3.1', lifespan=lifespan)
+app = FastAPI(title='Net2Net UniFi RADIUS', version='0.4.0', lifespan=lifespan)
 
 
 @app.exception_handler(RequestValidationError)
@@ -247,7 +256,7 @@ class Nas(BaseModel):
 def health():
     if RADIUS and (RADIUS_PROCESS is None or RADIUS_PROCESS.poll() is not None):
         raise HTTPException(503, 'RADIUS service is stopped')
-    return {'status': 'ok', 'product': 'Net2Net UniFi RADIUS', 'version': '0.3.1',
+    return {'status': 'ok', 'product': 'Net2Net UniFi RADIUS', 'version': '0.4.0',
             'radius_configured': bool(RADIUS)}
 
 
@@ -381,15 +390,10 @@ def accounting_records():
 
 @app.get('/api/accounting', dependencies=[Depends(admin)])
 def accounting():
-    sessions = {}
-    for r in accounting_records():
-        nas = r.get('NAS-IP-Address', r.get('Packet-Src-IP-Address', ''))
-        key = (nas, r['Acct-Session-Id'])
-        sessions[key] = {'session_id': r['Acct-Session-Id'], 'username': r.get('User-Name', ''),
-                         'nas': nas, 'mac': r.get('Calling-Station-Id', ''),
-                         'state': r.get('Acct-Status-Type', ''), 'seconds': r.get('Acct-Session-Time', '0'),
-                         'timestamp': r.get('Timestamp', '')}
-    return list(sessions.values())[-200:][::-1]
+    from . import usage
+    usage.ingest()
+    with db() as c:
+        return usage.sessions(c)
 
 
 @app.get('/api/ca', dependencies=[Depends(admin)])
@@ -422,7 +426,9 @@ def backup():
 
 from .importing import register_imports
 from .admins import register_admins
+from .usage import register_usage
 
 register_imports(app, admin)
 register_admins(app, admin)
+register_usage(app, admin)
 app.mount('/', StaticFiles(directory=WEB, html=True), name='portal')
