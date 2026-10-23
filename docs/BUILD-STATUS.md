@@ -1,10 +1,10 @@
 # Initial build — 23 October 2026
 
-Deployed to Unraid host `172.17.10.38` as `net2net-unifi-radius`, using Docker `br0` and dedicated container IP `172.17.10.101`.
+Validated on Unraid as `net2net-unifi-radius`, using Docker `br0` with an installation-specific LAN address. Configure addresses locally; no deployment addresses are included in public documentation.
 
-- Portal: http://172.17.10.101:8080
-- RADIUS authentication: 172.17.10.101:1812 UDP
-- RADIUS accounting: 172.17.10.101:1813 UDP
+- Portal: TCP port 8080 on your chosen container address
+- RADIUS authentication: UDP port 1812
+- RADIUS accounting: UDP port 1813
 - Data: `/mnt/user/appdata/net2net-unifi-radius/data`
 - Source: `/mnt/user/appdata/net2net-unifi-radius/source`
 - Administrator password: local `.env` and server `source/.env` (excluded from source control and the Docker image).

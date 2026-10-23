@@ -11,7 +11,7 @@ services:
       RADIUS_SERVER_NAME: ${RADIUS_SERVER_NAME:-radius.net2net.local}
     networks:
       br0:
-        ipv4_address: ${UNIFI_RADIUS_IP:-172.17.10.101}
+        ipv4_address: ${UNIFI_RADIUS_IP:?Set an unused LAN IP in your local .env file}
     volumes:
       - /mnt/user/appdata/net2net-unifi-radius/data:/data
     labels:

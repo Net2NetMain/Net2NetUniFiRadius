@@ -46,7 +46,7 @@ On Unraid without Compose:
 ```sh
 docker pull botchris/net2netunifiradius:latest
 docker run -d --name net2net-unifi-radius --restart unless-stopped \
-  --network br0 --ip 172.17.10.101 \
+  --network br0 --ip YOUR_UNUSED_LAN_IP \
   --env-file .env \
   -v /mnt/user/appdata/net2net-unifi-radius/data:/data \
   --label net.unraid.docker.managed=dockerman \
@@ -54,7 +54,7 @@ docker run -d --name net2net-unifi-radius --restart unless-stopped \
   botchris/net2netunifiradius:latest
 ```
 
-The configured Unraid deployment uses `br0` with the dedicated IP `172.17.10.101`. Open `http://172.17.10.101:8080`; RADIUS is directly available at `172.17.10.101:1812/udp` and `:1813/udp`. No host port mappings are needed on br0. If Compose is installed later, use `docker compose -f compose.unraid.yaml up -d --build`. The generic `compose.yaml` remains a portable Docker bridge example.
+Replace `YOUR_UNUSED_LAN_IP` with an unused address on your own LAN. With a dedicated `br0` address, open `http://YOUR_UNUSED_LAN_IP:8080`; RADIUS uses that address on UDP ports `1812` and `1813`. No host port mappings are needed on br0. For Compose, set `UNIFI_RADIUS_IP` in your local `.env` file, then use `docker compose -f compose.unraid.yaml up -d --build`. No address is supplied by default. The generic `compose.yaml` remains a portable Docker bridge example.
 
 Check for occupied ports first. If another RADIUS service uses 1812/1813, choose different host ports and enter those in UniFi. Keep the administrator portal on a trusted management network; use an HTTPS reverse proxy for remote access. The bootstrap password and Wi-Fi/shared secrets must never be committed to GitHub or baked into the image.
 
