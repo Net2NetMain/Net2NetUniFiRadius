@@ -14,7 +14,8 @@ from pathlib import Path
 
 from cryptography.fernet import Fernet
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
-from fastapi.responses import FileResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
@@ -60,14 +61,28 @@ def initialize():
           address TEXT UNIQUE NOT NULL, secret TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, expires INTEGER NOT NULL);
         CREATE TABLE IF NOT EXISTS attempts (address TEXT PRIMARY KEY, failures INTEGER, until_at INTEGER);
+        CREATE TABLE IF NOT EXISTS admins (id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT UNIQUE NOT NULL, display_name TEXT NOT NULL,
+          password_hash TEXT NOT NULL, salt TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1);
         ''')
-        if not c.execute("SELECT 1 FROM settings WHERE key='admin_hash'").fetchone():
-            password = os.environ.get('ADMIN_PASSWORD', '')
-            if len(password) < 12 or password.startswith('replace-'):
-                raise RuntimeError('Set ADMIN_PASSWORD to a unique password of at least 12 characters')
-            salt = secrets.token_hex(16)
-            c.executemany('INSERT INTO settings VALUES (?,?)',
-                          [('admin_salt', salt), ('admin_hash', password_hash(password, salt))])
+        if not c.execute('SELECT 1 FROM admins').fetchone():
+            legacy = dict(c.execute('SELECT key,value FROM settings').fetchall())
+            if 'admin_hash' in legacy and 'admin_salt' in legacy:
+                salt, digest = legacy['admin_salt'], legacy['admin_hash']
+            else:
+                password = os.environ.get('ADMIN_PASSWORD', '')
+                if len(password) < 12 or password.startswith('replace-'):
+                    raise RuntimeError('Set ADMIN_PASSWORD to a unique password of at least 12 characters')
+                salt = secrets.token_hex(16)
+                digest = password_hash(password, salt)
+            c.execute('INSERT INTO admins(username,display_name,password_hash,salt) VALUES (?,?,?,?)',
+                      ('admin', 'Administrator', digest, salt))
+        columns = {row[1] for row in c.execute('PRAGMA table_info(sessions)')}
+        if 'admin_id' not in columns:
+            c.execute('ALTER TABLE sessions ADD COLUMN admin_id INTEGER')
+            primary = c.execute('SELECT id FROM admins ORDER BY id LIMIT 1').fetchone()[0]
+            c.execute('UPDATE sessions SET admin_id=? WHERE admin_id IS NULL', (primary,))
+        c.execute("DELETE FROM settings WHERE key IN ('admin_hash','admin_salt')")
     (DATA / 'unifi.db').chmod(0o600)
 
 
@@ -162,21 +177,31 @@ async def lifespan(app):
             RADIUS_PROCESS.wait(timeout=10)
 
 
-app = FastAPI(title='Net2Net UniFi RADIUS', version='0.2.2', lifespan=lifespan)
+app = FastAPI(title='Net2Net UniFi RADIUS', version='0.3.0', lifespan=lifespan)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(request, exc):
+    # Credentials must not be echoed in validation responses.
+    return JSONResponse(status_code=422, content={'detail': [
+        {key: error[key] for key in ('loc', 'msg', 'type')} for error in exc.errors()]})
 
 
 def admin(request: Request):
     token = request.cookies.get('net2net_unifi', '')
     with db() as c:
-        row = c.execute('SELECT 1 FROM sessions WHERE token=? AND expires>?',
+        row = c.execute('SELECT a.id,a.username,a.display_name FROM sessions s JOIN admins a ON a.id=s.admin_id '
+                        'WHERE s.token=? AND s.expires>? AND a.enabled=1',
                         (hashlib.sha256(token.encode()).hexdigest(), time.time())).fetchone()
     if not row:
         raise HTTPException(401, 'Sign in to continue')
     if request.method not in ('GET', 'HEAD') and request.headers.get('X-Net2Net-Request') != 'portal':
         raise HTTPException(403, 'Missing request verification header')
+    return dict(row)
 
 
 class Login(BaseModel):
+    username: str = Field(default='admin', max_length=64)
     password: str = Field(max_length=256)
 
 
@@ -222,7 +247,7 @@ class Nas(BaseModel):
 def health():
     if RADIUS and (RADIUS_PROCESS is None or RADIUS_PROCESS.poll() is not None):
         raise HTTPException(503, 'RADIUS service is stopped')
-    return {'status': 'ok', 'product': 'Net2Net UniFi RADIUS', 'version': '0.2.2',
+    return {'status': 'ok', 'product': 'Net2Net UniFi RADIUS', 'version': '0.3.0',
             'radius_configured': bool(RADIUS)}
 
 
@@ -233,20 +258,22 @@ def login(body: Login, request: Request, response: Response):
         attempt = c.execute('SELECT * FROM attempts WHERE address=?', (address,)).fetchone()
         if attempt and attempt['failures'] >= 5 and attempt['until_at'] > time.time():
             raise HTTPException(429, 'Too many attempts. Try again in 5 minutes.')
-        settings = dict(c.execute('SELECT key,value FROM settings').fetchall())
-        if not hmac.compare_digest(password_hash(body.password, settings['admin_salt']), settings['admin_hash']):
+        account = c.execute('SELECT * FROM admins WHERE username=?', (body.username.strip().lower(),)).fetchone()
+        salt = account['salt'] if account else '00' * 16
+        digest = password_hash(body.password, salt)
+        if not account or not account['enabled'] or not hmac.compare_digest(digest, account['password_hash']):
             failures = attempt['failures'] + 1 if attempt and attempt['until_at'] > time.time() else 1
             c.execute('INSERT OR REPLACE INTO attempts VALUES (?,?,?)', (address, failures, int(time.time()) + 300))
             c.commit()
-            raise HTTPException(401, 'Incorrect password')
+            raise HTTPException(401, 'Incorrect username or password')
         c.execute('DELETE FROM attempts WHERE address=?', (address,))
         c.execute('DELETE FROM sessions WHERE expires<?', (time.time(),))
         token = secrets.token_urlsafe(32)
-        c.execute('INSERT INTO sessions VALUES (?,?)',
-                  (hashlib.sha256(token.encode()).hexdigest(), int(time.time()) + 28800))
+        c.execute('INSERT INTO sessions(token,expires,admin_id) VALUES (?,?,?)',
+                  (hashlib.sha256(token.encode()).hexdigest(), int(time.time()) + 28800, account['id']))
     response.set_cookie('net2net_unifi', token, httponly=True, samesite='strict',
                         secure=request.url.scheme == 'https', max_age=28800)
-    return {'username': 'admin'}
+    return {'username': account['username']}
 
 
 @app.post('/api/logout', dependencies=[Depends(admin)])
@@ -394,6 +421,8 @@ def backup():
 
 
 from .importing import register_imports
+from .admins import register_admins
 
 register_imports(app, admin)
+register_admins(app, admin)
 app.mount('/', StaticFiles(directory=WEB, html=True), name='portal')

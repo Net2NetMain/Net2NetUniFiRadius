@@ -1,8 +1,8 @@
 # Net2Net UniFi RADIUS
 
-Independent UniFi edition derived from [Net2NetRadius](https://github.com/Net2NetMain/Net2NetRadius). Version 0.2.2. The parent MikroTik application and its data are not changed.
+Independent UniFi edition derived from [Net2NetRadius](https://github.com/Net2NetMain/Net2NetRadius). Version 0.3.0. The parent MikroTik application and its data are not changed.
 
-Source: [Net2NetUniFiRadius](https://github.com/Net2NetMain/Net2NetUniFiRadius). Container: [botchris/net2netunifiradius](https://hub.docker.com/r/botchris/net2netunifiradius). Release tags: `0.2.2` and `latest`.
+Source: [Net2NetUniFiRadius](https://github.com/Net2NetMain/Net2NetUniFiRadius). Container: [botchris/net2netunifiradius](https://hub.docker.com/r/botchris/net2netunifiradius). Release tags: `0.3.0` and `latest`.
 
 ## Import CSV / Excel
 
@@ -39,7 +39,15 @@ Copy `.env.example` to `.env`, set a unique ADMIN_PASSWORD (12+ characters), and
 docker compose up -d --build
 ```
 
-Open `http://SERVER-IP:8088`. The portal has one administrator; sign in with ADMIN_PASSWORD. ADMIN_PASSWORD initializes an empty database only. Updating the environment does not reset an existing password.
+Open `http://SERVER-IP:8088`. Sign in with username `admin` and ADMIN_PASSWORD. ADMIN_PASSWORD initializes an empty database only. Updating the environment does not reset an existing password. Older password-only installations migrate automatically to the `admin` account with their existing password and active sessions preserved.
+
+## Administrator accounts
+
+Open **Administrators** to add named administrator accounts, manage display names, enable/disable accounts or reset another administrator's password. All administrators have full appliance access. Each account has a separate salted password hash and separate sessions; passwords are never shown in account lists.
+
+Use **Change my password** to change your own password. Account changes require your current administrator password. Administrator passwords require 12 or more characters; the 7-character Wi-Fi user minimum is separate. Changing your password signs out all your sessions. Resetting another administrator's password or disabling their account signs out their sessions. You cannot disable your own account, so at least one active administrator remains.
+
+An initial password is assigned when adding an administrator. Give the username/password to that administrator through your normal secure channel; they can change it after signing in. Keep the full appliance backup for recovery. The Docker bootstrap variable does not override account passwords after initialization.
 
 On Unraid without Compose:
 

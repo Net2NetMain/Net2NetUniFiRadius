@@ -1,5 +1,13 @@
 # Changes
 
+## 0.3.0 — 23 October 2026
+
+- Named administrator accounts with separate password hashes and sessions.
+- Administrators page: add users, edit names, reset passwords and disable accounts.
+- Change your own password with current-password verification and session revocation.
+- Preserve the existing password and sessions while migrating password-only installations to the admin account.
+- Prevent self-disable and strip credentials from validation error responses.
+
 ## 0.2.2 — 23 October 2026
 
 - Wi-Fi user passwords now accept 7 or more characters in forms, API and imports.
