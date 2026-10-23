@@ -1,5 +1,10 @@
 # Changes
 
+## 0.2.1 — 23 October 2026
+
+- Send an explicit server-plus-root certificate chain for Android Trust on First Use.
+- Keep existing CA, keys, server certificate and fingerprint unchanged.
+
 ## 0.2.0 — 23 October 2026
 
 - Import users, VLAN profiles and network devices from CSV or Excel.

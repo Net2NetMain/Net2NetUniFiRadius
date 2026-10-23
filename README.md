@@ -1,8 +1,8 @@
 # Net2Net UniFi RADIUS
 
-Independent UniFi edition derived from [Net2NetRadius](https://github.com/Net2NetMain/Net2NetRadius). Version 0.2.0. The parent MikroTik application and its data are not changed.
+Independent UniFi edition derived from [Net2NetRadius](https://github.com/Net2NetMain/Net2NetRadius). Version 0.2.1. The parent MikroTik application and its data are not changed.
 
-Source: [Net2NetUniFiRadius](https://github.com/Net2NetMain/Net2NetUniFiRadius). Container: [botchris/net2netunifiradius](https://hub.docker.com/r/botchris/net2netunifiradius). Release tags: `0.2.0` and `latest`.
+Source: [Net2NetUniFiRadius](https://github.com/Net2NetMain/Net2NetUniFiRadius). Container: [botchris/net2netunifiradius](https://hub.docker.com/r/botchris/net2netunifiradius). Release tags: `0.2.1` and `latest`.
 
 ## Import CSV / Excel
 

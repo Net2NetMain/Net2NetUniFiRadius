@@ -55,11 +55,21 @@ def certificates():
         path.chmod(0o600)
 
 
+def server_chain(folder):
+    """Send the root explicitly for Android Trust on First Use enrollment."""
+    path = folder / 'server-chain.pem'
+    path.write_bytes((folder / 'server.pem').read_bytes().rstrip() + b'\n' +
+                     (folder / 'ca.pem').read_bytes().rstrip() + b'\n')
+    path.chmod(0o644)
+    return path
+
+
 def configure():
     initialize()
     certificates()
     root = Path(RADIUS)
     certs = DATA.resolve() / 'certs'
+    server_chain(certs)
     (certs / 'ca.key').chmod(0o600)
     for name in ['ca.pem', 'server.pem']:
         (certs / name).chmod(0o644)
@@ -153,8 +163,9 @@ server inner-tunnel {
  max_sessions = 4096
  tls-config tls-common {{
   private_key_file = {certs}/server.key
-  certificate_file = {certs}/server.pem
+  certificate_file = {certs}/server-chain.pem
   ca_file = {certs}/ca.pem
+  auto_chain = no
   tls_min_version = "1.2"
   tls_max_version = "1.2"
   cipher_list = "DEFAULT"
