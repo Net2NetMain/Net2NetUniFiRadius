@@ -1,5 +1,9 @@
 # Changes
 
+## 0.3.1 — 23 October 2026
+
+- Link the sidebar Net2Net credit to https://www.net2net.co.za/ in a new tab.
+
 ## 0.3.0 — 23 October 2026
 
 - Named administrator accounts with separate password hashes and sessions.
