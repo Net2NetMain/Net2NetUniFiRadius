@@ -35,10 +35,10 @@ def test_csv_preview_apply_backup_and_replay(client):
 
 def test_bad_rows_are_atomic_and_no_secret_echo(client):
     sign_in(client)
-    data = users_csv() + b'bob,Bob,short123,Staff,20,active\n'
+    data = users_csv() + b'bob,Bob,short6,Staff,20,active\n'
     result = upload(client, data).json()
     assert not result['valid'] and result['errors'][0]['row'] == 3
-    assert 'short123' not in json.dumps(result)
+    assert 'short6' not in json.dumps(result)
     result = upload(client, data, token=result['token']).json()
     assert not result.get('applied')
     assert client.get('/api/state').json()['users'] == []
@@ -63,6 +63,14 @@ def test_duplicate_skip_update_and_blank_password(client):
     assert client.get('/api/state').json()['users'][0]['status'] == 'disabled'
     with main.db() as c:
         assert c.execute('SELECT password FROM users').fetchone()[0] == old_password
+
+
+def test_import_seven_character_password(client):
+    sign_in(client)
+    data = users_csv(password='7041839')
+    preview = upload(client, data).json()
+    assert preview['valid']
+    assert upload(client, data, token=preview['token']).json()['applied']
 
 
 def test_full_excel_and_templates(client):

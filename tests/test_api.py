@@ -86,6 +86,20 @@ def test_login_rate_limit(client):
     assert client.post('/api/login', json={'password': 'wrong'}).status_code == 429
 
 
+def test_wifi_password_minimum_and_numeric_leading_zero(client):
+    sign_in(client)
+    client.post('/api/profiles', json={'name': 'Staff', 'vlan': 20})
+    profile_id = client.get('/api/state').json()['profiles'][0]['id']
+    user = {'username': 'boundary-user', 'display_name': 'Boundary user', 'profile_id': profile_id}
+    assert client.post('/api/users', json={**user, 'password': '123456'}).status_code == 422
+    assert client.post('/api/users', json={**user, 'password': '7041839'}).status_code == 200
+    user_id = client.get('/api/state').json()['users'][0]['id']
+    assert client.put(f'/api/users/{user_id}', json={**user, 'password': '06514783'}).status_code == 200
+    with main.db() as c:
+        stored = c.execute('SELECT password FROM users WHERE id=?', (user_id,)).fetchone()[0]
+        assert main.encryptor().decrypt(stored.encode()).decode() == '06514783'
+
+
 def test_accounting_nas_session_collision(client):
     sign_in(client)
     for host in ['192.0.2.10', '192.0.2.11']:

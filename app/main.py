@@ -162,7 +162,7 @@ async def lifespan(app):
             RADIUS_PROCESS.wait(timeout=10)
 
 
-app = FastAPI(title='Net2Net UniFi RADIUS', version='0.2.1', lifespan=lifespan)
+app = FastAPI(title='Net2Net UniFi RADIUS', version='0.2.2', lifespan=lifespan)
 
 
 def admin(request: Request):
@@ -195,8 +195,8 @@ class User(BaseModel):
     @field_validator('password')
     @classmethod
     def printable(cls, value):
-        if value and (len(value) < 12 or not value.isascii() or not value.isprintable()):
-            raise ValueError('Use at least 12 printable ASCII characters')
+        if value and (len(value) < 7 or not value.isascii() or not value.isprintable()):
+            raise ValueError('Use at least 7 printable ASCII characters')
         return value
 
 
@@ -222,7 +222,7 @@ class Nas(BaseModel):
 def health():
     if RADIUS and (RADIUS_PROCESS is None or RADIUS_PROCESS.poll() is not None):
         raise HTTPException(503, 'RADIUS service is stopped')
-    return {'status': 'ok', 'product': 'Net2Net UniFi RADIUS', 'version': '0.2.1',
+    return {'status': 'ok', 'product': 'Net2Net UniFi RADIUS', 'version': '0.2.2',
             'radius_configured': bool(RADIUS)}
 
 

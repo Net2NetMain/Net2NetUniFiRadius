@@ -37,7 +37,7 @@ def run():
     suffix = secrets.token_hex(4)
     profile_id = user_id = nas_id = None
     secret = secrets.token_hex(16)
-    password = 'Smoke-%{literal}-' + secrets.token_hex(8)
+    password = f'{secrets.randbelow(10**8):08d}'
     username = 'smoke-' + suffix
     try:
         api('profiles', {'name': 'Smoke ' + suffix, 'vlan': 3077})
