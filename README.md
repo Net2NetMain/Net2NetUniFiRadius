@@ -123,4 +123,6 @@ This creates temporary records, tests PEAP/MSCHAPv2, PAP, VLAN replies, accounti
 
 ### Portal branding
 
-In **UniFi setup → Portal branding**, upload a PNG, JPG or WebP logo (up to 2 MB). The logo appears on the sign-in page and sidebar and supplies the favicon. Restore Net2Net branding from the same panel. Branding persists in the database and appliance backups.
+In **Local Controls → Portal branding**, upload a PNG, JPG or WebP logo (up to 2 MB). The logo appears on the sign-in page and sidebar and supplies the favicon. Restore Net2Net branding from the same panel. Branding persists in the database and appliance backups.
+
+Local Controls also manages administrator accounts and the sign-in organization name. The organization name can be left blank to hide it.

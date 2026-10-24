@@ -11,6 +11,9 @@ from PIL import Image, ImageOps
 class LogoUpload(BaseModel):
     image: str = Field(max_length=2800000)
 
+class BrandingText(BaseModel):
+    organization_name: str = Field(max_length=100)
+
 def register_branding(app, admin):
     from .main import db, WEB
 
@@ -22,7 +25,15 @@ def register_branding(app, admin):
     @app.get('/api/branding')
     def branding():
         data = image_bytes()
-        return {'custom_logo': bool(data), 'revision': hashlib.sha256(data).hexdigest()[:16] if data else 'default'}
+        with db() as c:
+            row = c.execute("SELECT value FROM settings WHERE key='organization_name'").fetchone()
+        return {'organization_name': row[0] if row else 'NET2NET NETWORK SERVICES', 'custom_logo': bool(data), 'revision': hashlib.sha256(data).hexdigest()[:16] if data else 'default'}
+
+    @app.put('/api/branding', dependencies=[Depends(admin)])
+    def update_text(body: BrandingText):
+        with db() as c:
+            c.execute("INSERT OR REPLACE INTO settings VALUES ('organization_name',?)", (body.organization_name.strip(),))
+        return branding()
 
     @app.get('/api/branding/logo')
     def logo():

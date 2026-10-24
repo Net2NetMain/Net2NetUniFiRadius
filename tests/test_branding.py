@@ -19,3 +19,14 @@ def test_logo_upload_persistence_backup_and_reset(client):
         assert b'portal_logo' in archive.read('unifi.db')
     assert client.delete('/api/branding').json()['custom_logo'] is False
     assert client.get('/api/branding/logo').status_code == 404
+
+
+def test_organization_name_permissions_and_persistence(client):
+    assert client.get('/api/branding').json()['organization_name'] == 'NET2NET NETWORK SERVICES'
+    assert client.put('/api/branding',json={'organization_name':'Example'}).status_code == 401
+    sign_in(client)
+    assert client.put('/api/branding',json={'organization_name':'  Example & Co  '}).json()['organization_name'] == 'Example & Co'
+    assert client.get('/api/branding').json()['organization_name'] == 'Example & Co'
+    assert client.delete('/api/branding').json()['organization_name'] == 'Example & Co'
+    assert client.put('/api/branding',json={'organization_name':'x'*101}).status_code == 422
+    assert client.put('/api/branding',json={'organization_name':''}).json()['organization_name'] == ''

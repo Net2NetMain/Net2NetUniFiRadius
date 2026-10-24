@@ -1,5 +1,10 @@
 # Changes
 
+## 0.4.2 — 24 October 2026
+
+- Move portal branding and administrator management together under Local Controls.
+- Allow administrators to edit or hide the sign-in organization name.
+
 ## 0.4.1 — 24 October 2026
 
 - Add default favicon and organization logo uploads in UniFi setup.
