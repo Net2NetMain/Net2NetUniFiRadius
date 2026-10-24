@@ -186,7 +186,7 @@ async def lifespan(app):
             RADIUS_PROCESS.wait(timeout=10)
 
 
-app = FastAPI(title='Net2Net UniFi RADIUS', version='0.4.0', lifespan=lifespan)
+app = FastAPI(title='Net2Net UniFi RADIUS', version='0.4.1', lifespan=lifespan)
 
 
 @app.exception_handler(RequestValidationError)
@@ -256,7 +256,7 @@ class Nas(BaseModel):
 def health():
     if RADIUS and (RADIUS_PROCESS is None or RADIUS_PROCESS.poll() is not None):
         raise HTTPException(503, 'RADIUS service is stopped')
-    return {'status': 'ok', 'product': 'Net2Net UniFi RADIUS', 'version': '0.4.0',
+    return {'status': 'ok', 'product': 'Net2Net UniFi RADIUS', 'version': '0.4.1',
             'radius_configured': bool(RADIUS)}
 
 
@@ -431,4 +431,6 @@ from .usage import register_usage
 register_imports(app, admin)
 register_admins(app, admin)
 register_usage(app, admin)
+from .branding import register_branding
+register_branding(app, admin)
 app.mount('/', StaticFiles(directory=WEB, html=True), name='portal')

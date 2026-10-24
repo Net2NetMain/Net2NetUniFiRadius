@@ -1,5 +1,10 @@
 # Changes
 
+## 0.4.1 — 24 October 2026
+
+- Add default favicon and organization logo uploads in UniFi setup.
+- Apply custom logos to login, sidebar and favicon; retain branding in appliance backups.
+
 ## 0.4.0 — 23 October 2026
 
 - Data usage dashboard: highest-usage users, upload/download totals, period and user filters.

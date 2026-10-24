@@ -120,3 +120,7 @@ docker run --rm --network container:net2net-unifi-radius --env-file .env \
 ```
 
 This creates temporary records, tests PEAP/MSCHAPv2, PAP, VLAN replies, accounting and suspension, then removes those records. It requires the initial administrator password to still match `.env` and no existing loopback NAS registration. Keep this test image separate from the runtime image.
+
+### Portal branding
+
+In **UniFi setup → Portal branding**, upload a PNG, JPG or WebP logo (up to 2 MB). The logo appears on the sign-in page and sidebar and supplies the favicon. Restore Net2Net branding from the same panel. Branding persists in the database and appliance backups.
